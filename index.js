@@ -25,6 +25,7 @@ async function connectMongo() {
         deprecationErrors: true,
       },
     });
+
     await dbClient.connect();
     console.log("✅ Connected to MongoDB!");
     await dbClient.db("admin").command({ ping: 1 });
