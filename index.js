@@ -1,6 +1,13 @@
+
+
+
+
 // index.js
 import express from "express";
-import { MongoClient } from "mongodb";
+import { MongoClient, ServerApiVersion } from "mongodb";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 // === Ensure environment variable is set ===
 const mongoUri = process.env.MONGO_URI;
@@ -15,13 +22,27 @@ app.use(express.json());
 
 // === Connect to MongoDB ===
 let dbClient;
+
 async function connectMongo() {
   try {
-    dbClient = new MongoClient(mongoUri);
+    dbClient = new MongoClient(mongoUri, {
+      serverApi: {
+        version: ServerApiVersion.v1,
+        strict: true,
+        deprecationErrors: true,
+      },
+      ssl: true, // force SSL
+      tlsAllowInvalidCertificates: false,
+    });
+
     await dbClient.connect();
-    console.log("✅ Connected to MongoDB!");
+    console.log("✅ Connected to MongoDB successfully!");
+
+    // Optional: verify connection
+    await dbClient.db("admin").command({ ping: 1 });
+    console.log("✅ Pinged your MongoDB deployment. Connection confirmed!");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   }
 }
