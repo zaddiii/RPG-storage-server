@@ -1,8 +1,5 @@
 
-
-
-
-
+// index.js
 import express from "express";
 import { MongoClient, ServerApiVersion } from "mongodb";
 import dotenv from "dotenv";
@@ -22,19 +19,16 @@ let dbClient;
 
 async function connectMongo() {
   try {
-    // Use only serverApi, no extra TLS/SSL options
     dbClient = new MongoClient(mongoUri, {
-      serverApi: ServerApiVersion.v1
+      serverApi: { version: ServerApiVersion.v1 },
     });
 
     await dbClient.connect();
     console.log("✅ Connected to MongoDB successfully!");
-
-    // Optional: verify connection
     await dbClient.db("admin").command({ ping: 1 });
-    console.log("✅ Pinged your MongoDB deployment. Connection confirmed!");
+    console.log("✅ Pinged MongoDB deployment. Connection confirmed!");
   } catch (err) {
-    console.error("❌ MongoDB connection error:", err.message);
+    console.error("❌ MongoDB connection error:", err);
     process.exit(1);
   }
 }
