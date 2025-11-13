@@ -1,45 +1,53 @@
 
 // index.js
 import express from "express";
-import { MongoClient, ServerApiVersion } from "mongodb";
+import cors from "cors";
 import dotenv from "dotenv";
+import { MongoClient } from "mongodb";
 
 dotenv.config();
 
-const mongoUri = process.env.MONGO_URI;
-if (!mongoUri) {
-  console.error("❌ Error: MONGO_URI environment variable is not set");
-  process.exit(1);
-}
-
 const app = express();
+app.use(cors());
 app.use(express.json());
 
-let dbClient;
+const PORT = process.env.PORT || 3000;
 
+let db;
+
+// Connect to MongoDB Atlas
 async function connectMongo() {
   try {
-    dbClient = new MongoClient(mongoUri, {
-      serverApi: { version: ServerApiVersion.v1 },
+    const client = new MongoClient(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // optional: short timeout for deploy
     });
 
-    await dbClient.connect();
-    console.log("✅ Connected to MongoDB successfully!");
-    await dbClient.db("admin").command({ ping: 1 });
-    console.log("✅ Pinged MongoDB deployment. Connection confirmed!");
+    await client.connect();
+    db = client.db(); // Database name from URI
+    console.log("✅ Connected to MongoDB Atlas!");
   } catch (err) {
     console.error("❌ MongoDB connection error:", err);
-    process.exit(1);
+    process.exit(1); // Stop server if DB fails
   }
 }
 
-app.get("/", (req, res) => {
-  res.send("Server is running!");
+// Routes
+app.get("/", (req, res) => res.send("RPG Server is running!"));
+
+app.get("/players", async (req, res) => {
+  try {
+    const players = await db.collection("players").find().toArray();
+    res.json(players);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch players" });
+  }
 });
 
-const PORT = process.env.PORT || 3000;
+// Start server after MongoDB connection
 connectMongo().then(() => {
   app.listen(PORT, () => {
-    console.log(`🚀 Server listening on port ${PORT}`);
+    console.log(`🚀 Server running on port ${PORT}`);
   });
 });
